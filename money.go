@@ -1,9 +1,9 @@
 package r18n
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
+	"unicode/utf8"
 )
 
 // Format: {[thousand separator][decimal separator][digits after separator]}
@@ -39,13 +39,13 @@ func FormatNumber(fmt string, amount int) string {
 			}
 		case 3:
 			mode = 0
-			ans.WriteString(actualFormatNumber(tmp.String(), amount))
+			actualFormatNumber(tmp.String(), amount, &ans)
 		default:
 			panic("unexpected mode in FormatMoney")
 		}
 	}
 	if mode == 3 {
-		ans.WriteString(actualFormatNumber(tmp.String(), amount))
+		actualFormatNumber(tmp.String(), amount, &ans)
 	}
 	println()
 
@@ -60,21 +60,48 @@ func intPow(base, exp int) int {
 	return ans
 }
 
-func actualFormatNumber(fmt_ string, amount int) string {
-	sep_1000 := fmt_[0]
-	sep_dec := fmt_[1]
-	digits, err := strconv.Atoi(fmt_[2:])
-	if err != nil {
-		panic(err)
+func actualFormatNumber(fmt_ string, amount int, ans *strings.Builder) {
+	sep_1000 := '\''
+	sep_dec := utf8.RuneError
+	var err error
+	digits := 0
+
+	fmt2 := []rune(fmt_)
+	sep_1000 = fmt2[0]
+	if len(fmt_) >= 3 {
+		sep_dec = fmt2[1]
+		digits, err = strconv.Atoi(fmt_[2:])
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	println(">", sep_1000, sep_dec, digits)
 
-	int_part := amount / intPow(10, digits)
-	frac_part := amount % intPow(10, digits)
+	int_part := []rune(strconv.Itoa(amount / intPow(10, digits)))
+	println("int_part=", string(int_part))
+	frac_part := strconv.Itoa(amount % intPow(10, digits))
+	println("frac_part=", string(frac_part))
 
-	println(">", int_part, frac_part)
-	ans := fmt.Sprintf("%d%c%d", int_part, sep_dec, frac_part)
-	println(">", ans)
-	return ans
+	int_part2 := make([]rune, 0)
+	for i := len(int_part) - 1; i >= 0; i-- {
+		int_part2 = append(int_part2, int_part[i])
+		if i%3 == 0 {
+			int_part2 = append(int_part2, sep_1000)
+		}
+	}
+	println(string(int_part2))
+
+	for i := len(int_part2) - 1; i >= 0; i-- {
+		r := int_part2[i]
+		if r == '.' && i == len(int_part2)-1 {
+			continue
+		}
+		ans.WriteRune(r)
+	}
+
+	if sep_dec != utf8.RuneError {
+		ans.WriteRune(sep_dec)
+		ans.WriteString(frac_part)
+	}
 }

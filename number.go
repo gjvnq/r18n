@@ -14,8 +14,7 @@ func FormatNumber(fmt string, amount int) string {
 	ans := strings.Builder{}
 	tmp := strings.Builder{}
 	mode := 0 // 0 - copying | 1 - escape | 2 - processing | 3 - finalizing
-	for i, c := range fmt {
-		println(mode, i, string(c))
+	for _, c := range fmt {
 		switch mode {
 		case 0:
 			switch c {
@@ -47,7 +46,6 @@ func FormatNumber(fmt string, amount int) string {
 	if mode == 3 {
 		actualFormatNumber(tmp.String(), amount, &ans)
 	}
-	println()
 
 	return ans.String()
 }
@@ -76,12 +74,8 @@ func actualFormatNumber(fmt_ string, amount int, ans *strings.Builder) {
 		}
 	}
 
-	println(">", sep_1000, sep_dec, digits)
-
 	int_part := []rune(strconv.Itoa(amount / intPow(10, digits)))
-	println("int_part=", string(int_part))
 	frac_part := strconv.Itoa(amount % intPow(10, digits))
-	println("frac_part=", string(frac_part))
 
 	int_part2 := make([]rune, 0)
 	for i := len(int_part) - 1; i >= 0; i-- {
@@ -90,7 +84,6 @@ func actualFormatNumber(fmt_ string, amount int, ans *strings.Builder) {
 			int_part2 = append(int_part2, sep_1000)
 		}
 	}
-	println(string(int_part2))
 
 	for i := len(int_part2) - 1; i >= 0; i-- {
 		r := int_part2[i]

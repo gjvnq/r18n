@@ -1,0 +1,14 @@
+{
+	"currencies": {
+		"BRL": "R$ {.,2}",
+		"BRL-long": "{.,2} reais",
+		"USD": "U$ {.,2}",
+		"USD-long": "{.,2} doláres americanos",
+	},
+	"messages": {
+		"STUDENT": "alun${m:o|f:a|n:x|b:o(a)}${p:s|r:(s)}",
+		"FRIEND": "amig${m:o|f:a|n:x|b:o(a)}${p:s|r:(s)}",
+		"PHOTO": "foto${p:s}",
+		"FRIEND_LIKES_PHOTOS": "${1} $1{:FRIEND} gost$2{s:ou|p:aram} de ${2} $2{:PHOTO} sua${p:s}"
+	}
+}

@@ -1,2 +1,2 @@
-# romance-i18n
+# r18n
 A golang library for i18n focused on romance languages.

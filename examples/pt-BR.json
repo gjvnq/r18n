@@ -3,7 +3,7 @@
 		"BRL": "R$ {.,2}",
 		"BRL-long": "{.,2} reais",
 		"USD": "U$ {.,2}",
-		"USD-long": "{.,2} doláres americanos",
+		"USD-long": "{.,2} dólares americanos",
 	},
 	"messages": {
 		"STUDENT": "alun${m:o|f:a|n:x|b:o(a)}${p:s|r:(s)}",

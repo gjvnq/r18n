@@ -98,3 +98,114 @@ func actualFormatNumber(fmt_ string, amount int, ans *strings.Builder) {
 		ans.WriteString(frac_part)
 	}
 }
+
+var ptCardinalsSmall map[int]string = map[int]string{
+	0:  "zero",
+	1:  "um",
+	2:  "dois",
+	3:  "três",
+	4:  "quatro",
+	5:  "cinco",
+	6:  "seis",
+	7:  "sete",
+	8:  "oito",
+	9:  "nove",
+	10: "dez",
+	11: "onze",
+	12: "doze",
+	13: "treze",
+	14: "catorze",
+	15: "quinze",
+	16: "dezesseis",
+	17: "dezessete",
+	18: "dezoito",
+	19: "dezenove",
+}
+
+var ptCardinalsTens map[int]string = map[int]string{
+	20: "vinte",
+	30: "trinta",
+	40: "quarenta",
+	50: "cinquenta",
+	60: "sessenta",
+	70: "setenta",
+	80: "oitenta",
+	90: "noventa",
+}
+
+var ptCardinalsHundreds map[int]string = map[int]string{
+	100: "cem",
+	200: "duzent@s",
+	300: "trezent@s",
+	400: "quatrocent@s",
+	500: "quinhent@s",
+	600: "seiscent@s",
+	700: "setecent@s",
+	800: "oitocent@s",
+	900: "novecent@s",
+}
+
+var ptCardinalsScale map[int]string = map[int]string{
+	3:  "mil",
+	6:  "milhão",
+	9:  "bilhão",
+	12: "trilhão",
+	15: "quadrilhão",
+}
+
+func ptNumberIntCardinal(gender string, val int) string {
+	ans := ""
+	negative := false
+
+	if val < 0 {
+		val *= -1
+		negative = true
+	}
+	// Special case
+	if val == 100 {
+		return "cem"
+	}
+
+	// Process gender
+	gender_marker := "o"
+	if gender == GENDER_FEMALE {
+		gender_marker = "a"
+		ans = strings.Replace(ans, "dois", "duas", -1)
+	}
+	if gender == GENDER_NON_BINARY {
+		gender_marker = "x"
+		ans = strings.Replace(ans, "dois", "doux", -1)
+	}
+
+	// I should read http://www.blackwasp.co.uk/NumberToWords.aspx
+
+	// General case (do largest to smallest)
+	for val > 0 {
+		if ans != "" {
+			ans += " e "
+		}
+		if got, ok := ptCardinals[val]; ok {
+			ans += got
+			break
+		}
+		best := 0
+		for _, offer := range ptCardinalsOrder {
+			if best < val && offer <= val {
+				best = offer
+			}
+		}
+		ans += ptCardinals[best]
+		val -= best
+	}
+
+	// Remebember to tell is the number was negative
+	if negative {
+		ans += " negativ@"
+		if val > 1 {
+			ans += "s"
+		}
+	}
+	// Fix gender
+	ans = strings.Replace(ans, "@", gender_marker, -1)
+	return ans
+}

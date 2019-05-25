@@ -8,6 +8,11 @@ const (
 	PLURAL            = "P" // Ex: alunos
 )
 
+const (
+	EN = "en"
+	PT = "pt"
+)
+
 type MsgPart interface {
 	GenderAndNumber() string
 	String() string

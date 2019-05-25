@@ -1,21 +1,12 @@
 package r18n
 
 import (
+	"errors"
 	"math"
 	"strconv"
 	"strings"
 	"unicode/utf8"
 )
-
-// Format: {[thousand separator][decimal separator][digits after separator]}
-// Ex:  {.} 1.000
-// Ex:  {.,2} 1.000,00
-// Ex:  {,.2} 1,000.00
-
-// Format: {[thousand separator][decimal separator][digits after separator]}
-// Ex:  {.} 1.000
-// Ex:  {.,2} 1.000,00
-// Ex:  {,.2} 1,000.00
 
 // Format: {[thousand separator][decimal separator][digits after separator]}
 // Ex:  {.} 1.000
@@ -115,71 +106,6 @@ func actualFormatNumber(fmt_ string, amount int, ans *strings.Builder) {
 	}
 }
 
-var ptCardinalsSmall map[int]string = map[int]string{
-	1:  "um",
-	2:  "dois",
-	3:  "três",
-	4:  "quatro",
-	5:  "cinco",
-	6:  "seis",
-	7:  "sete",
-	8:  "oito",
-	9:  "nove",
-	10: "dez",
-	11: "onze",
-	12: "doze",
-	13: "treze",
-	14: "catorze",
-	15: "quinze",
-	16: "dezesseis",
-	17: "dezessete",
-	18: "dezoito",
-	19: "dezenove",
-}
-
-var ptCardinalsTens map[int]string = map[int]string{
-	20: "vinte",
-	30: "trinta",
-	40: "quarenta",
-	50: "cinquenta",
-	60: "sessenta",
-	70: "setenta",
-	80: "oitenta",
-	90: "noventa",
-}
-
-var ptCardinalsHundreds map[int]string = map[int]string{
-	100: "cento",
-	200: "duzent@s",
-	300: "trezent@s",
-	400: "quatrocent@s",
-	500: "quinhent@s",
-	600: "seiscent@s",
-	700: "setecent@s",
-	800: "oitocent@s",
-	900: "novecent@s",
-}
-
-var ptCardinalsScale map[int]string = map[int]string{
-	1000:             "mil",
-	1000000:          "milhão",
-	1000000000:       "bilhão",
-	1000000000000:    "trilhão",
-	1000000000000000: "quadrilhão",
-}
-
-var ptCardinalsScaleSet map[string]bool = map[string]bool{
-	"mil":         true,
-	"milhão":      true,
-	"milhões":     true,
-	"bilhão":      true,
-	"bilhões":     true,
-	"trilhão":     true,
-	"trilhões":    true,
-	"quadrilhão":  true,
-	"quadrilhões": true,
-}
-
 func getBestNum(val *int, m map[int]string) string {
 	best_k := -1
 	for k, _ := range m {
@@ -210,38 +136,62 @@ func inMap(val string, m map[int]string) bool {
 	return false
 }
 
-func ptNumberIntCardinalCore(gender string, val int, ans *[]string) {
+func numberIntCardinalCore(gender string, val int, ans *[]string, cardinalsScale, cardinalsHundreds, cardinalsTens, cardinalsSmall map[int]string) {
 	for val > 999 {
 		part, fac := getScaleTriad(val)
 		tmp := val
-		sw := getBestNum(&tmp, ptCardinalsScale)
-		ptNumberIntCardinalCore(gender, part, ans)
+		sw := getBestNum(&tmp, cardinalsScale)
+		numberIntCardinalCore(gender, part, ans, cardinalsScale, cardinalsHundreds, cardinalsTens, cardinalsSmall)
 		if part > 1 {
 			sw = strings.Replace(sw, "ão", "ões", -1)
 		}
 		*ans = append(*ans, sw)
 		val -= part * fac
 	}
-	*ans = append(*ans, getBestNum(&val, ptCardinalsHundreds))
-	*ans = append(*ans, getBestNum(&val, ptCardinalsTens))
-	*ans = append(*ans, getBestNum(&val, ptCardinalsSmall))
+	*ans = append(*ans, getBestNum(&val, cardinalsHundreds))
+	*ans = append(*ans, getBestNum(&val, cardinalsTens))
+	*ans = append(*ans, getBestNum(&val, cardinalsSmall))
 }
 
-func ptNumberIntCardinal(gender string, val int) string {
+func NumberIntCardinal(language string, gender string, val int) string {
+	var cardinalsScale, cardinalsHundreds, cardinalsTens, cardinalsSmall map[int]string
+	var cardinalsScaleSet map[string]bool
+	var and string
 	words := make([]string, 0)
 	negative := false
 
 	if val == 0 {
 		return "zero"
-	} else if val == 100 {
-		return "cem"
 	}
-
 	if val < 0 {
 		val *= -1
 		negative = true
 	}
-	ptNumberIntCardinalCore(gender, val, &words)
+	if negative && language == EN {
+		words = append(words, "negative")
+	}
+	if language == PT {
+		if val == 100 {
+			words = append(words, "cem")
+			val = 0
+		}
+		cardinalsScale = ptCardinalsScale
+		cardinalsScaleSet = ptCardinalsScaleSet
+		cardinalsHundreds = ptCardinalsHundreds
+		cardinalsTens = ptCardinalsTens
+		cardinalsSmall = ptCardinalsSmall
+		and = ptAnd
+	} else if language == EN {
+		cardinalsScale = enCardinalsScale
+		cardinalsScaleSet = enCardinalsScaleSet
+		cardinalsHundreds = enCardinalsHundreds
+		cardinalsTens = enCardinalsTens
+		cardinalsSmall = enCardinalsSmall
+		and = enAnd
+	} else {
+		panic(errors.New("unknown language: " + language))
+	}
+	numberIntCardinalCore(gender, val, &words, cardinalsScale, cardinalsHundreds, cardinalsTens, cardinalsSmall)
 
 	// Filter
 	words2 := words
@@ -254,16 +204,27 @@ func ptNumberIntCardinal(gender string, val int) string {
 
 	// Join words
 	ans := ""
+	and = " " + and + " "
 	for i, w := range words {
-		if i == 0 && i+1 < len(words) && w == "um" && words[i+1] == "mil" {
+		if language == PT && i == 0 && i+1 < len(words) && w == "um" && words[i+1] == "mil" {
 			continue
 		}
 		if ans != "" {
-			if inMap(words[i-1], ptCardinalsSmall) || ptCardinalsScaleSet[words[i-1]] {
-				ans += " "
-			} else {
-				ans += " e "
+			switch language {
+			case PT:
+				if inMap(words[i-1], cardinalsSmall) || cardinalsScaleSet[words[i-1]] {
+					ans += " "
+				} else {
+					ans += and
+				}
+			default:
+				if i != 0 && inMap(words[i-1], cardinalsHundreds) {
+					ans += and
+				} else {
+					ans += " "
+				}
 			}
+
 		}
 		ans += w
 	}
@@ -280,7 +241,7 @@ func ptNumberIntCardinal(gender string, val int) string {
 	}
 
 	// Remebember to tell is the number was negative
-	if negative {
+	if negative && language == PT {
 		ans += " negativ@"
 		if val > 1 {
 			ans += "s"

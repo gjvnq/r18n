@@ -198,7 +198,6 @@ func getScaleTriad(val int) (int, int) {
 	s := int(math.Log10(float64(val))) / 3
 	fac := int(math.Pow10(s * 3))
 	ans := val / fac
-	println("getScaleTriad(", val, ") -> ", fac, ans)
 	return ans, fac
 }
 
@@ -212,20 +211,16 @@ func inMap(val string, m map[int]string) bool {
 }
 
 func ptNumberIntCardinalCore(gender string, val int, ans *[]string) {
-	println("ptNumberIntCardinalCore(", val, ")")
 	for val > 999 {
-		println(">", val)
 		part, fac := getScaleTriad(val)
 		tmp := val
 		sw := getBestNum(&tmp, ptCardinalsScale)
-		println(val, part, sw)
 		ptNumberIntCardinalCore(gender, part, ans)
 		if part > 1 {
 			sw = strings.Replace(sw, "ão", "ões", -1)
 		}
 		*ans = append(*ans, sw)
 		val -= part * fac
-		println(val, part, sw, part*fac)
 	}
 	*ans = append(*ans, getBestNum(&val, ptCardinalsHundreds))
 	*ans = append(*ans, getBestNum(&val, ptCardinalsTens))

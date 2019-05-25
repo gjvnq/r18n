@@ -1,13 +1,11 @@
 package r18n
 
 const (
-	GENDER_MALE        = "M" // Ex: aluno
-	GENDER_FEMALE      = "F" // Ex: aluna
-	GENDER_NON_BINARY  = "X" // Ex: alunx
-	GENDER_BOTH        = "B" // Ex: aluno(a)
-	SINGULAR           = "S" // Ex: aluno
-	PLURAL             = "P" // Ex: alunos
-	SINGULAR_AND_PURAL = "R" // Ex: aluno(s)
+	GENDER_MALE       = "M" // Ex: aluno
+	GENDER_FEMALE     = "F" // Ex: aluna
+	GENDER_NON_BINARY = "X" // Ex: alunx
+	SINGULAR          = "S" // Ex: aluno
+	PLURAL            = "P" // Ex: alunos
 )
 
 type MsgPart interface {

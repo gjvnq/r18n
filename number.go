@@ -1,10 +1,26 @@
 package r18n
 
 import (
+	"math"
 	"strconv"
 	"strings"
 	"unicode/utf8"
 )
+
+// Format: {[thousand separator][decimal separator][digits after separator]}
+// Ex:  {.} 1.000
+// Ex:  {.,2} 1.000,00
+// Ex:  {,.2} 1,000.00
+
+// Format: {[thousand separator][decimal separator][digits after separator]}
+// Ex:  {.} 1.000
+// Ex:  {.,2} 1.000,00
+// Ex:  {,.2} 1,000.00
+
+// Format: {[thousand separator][decimal separator][digits after separator]}
+// Ex:  {.} 1.000
+// Ex:  {.,2} 1.000,00
+// Ex:  {,.2} 1,000.00
 
 // Format: {[thousand separator][decimal separator][digits after separator]}
 // Ex:  {.} 1.000
@@ -100,7 +116,6 @@ func actualFormatNumber(fmt_ string, amount int, ans *strings.Builder) {
 }
 
 var ptCardinalsSmall map[int]string = map[int]string{
-	0:  "zero",
 	1:  "um",
 	2:  "dois",
 	3:  "três",
@@ -134,7 +149,7 @@ var ptCardinalsTens map[int]string = map[int]string{
 }
 
 var ptCardinalsHundreds map[int]string = map[int]string{
-	100: "cem",
+	100: "cento",
 	200: "duzent@s",
 	300: "trezent@s",
 	400: "quatrocent@s",
@@ -146,24 +161,116 @@ var ptCardinalsHundreds map[int]string = map[int]string{
 }
 
 var ptCardinalsScale map[int]string = map[int]string{
-	3:  "mil",
-	6:  "milhão",
-	9:  "bilhão",
-	12: "trilhão",
-	15: "quadrilhão",
+	1000:             "mil",
+	1000000:          "milhão",
+	1000000000:       "bilhão",
+	1000000000000:    "trilhão",
+	1000000000000000: "quadrilhão",
+}
+
+var ptCardinalsScaleSet map[string]bool = map[string]bool{
+	"mil":         true,
+	"milhão":      true,
+	"milhões":     true,
+	"bilhão":      true,
+	"bilhões":     true,
+	"trilhão":     true,
+	"trilhões":    true,
+	"quadrilhão":  true,
+	"quadrilhões": true,
+}
+
+func getBestNum(val *int, m map[int]string) string {
+	best_k := -1
+	for k, _ := range m {
+		if best_k < k && k <= *val {
+			best_k = k
+		}
+	}
+	if best_k < 0 {
+		return ""
+	}
+	*val -= best_k
+	return m[best_k]
+}
+
+func getScaleTriad(val int) (int, int) {
+	s := int(math.Log10(float64(val))) / 3
+	fac := int(math.Pow10(s * 3))
+	ans := val / fac
+	println("getScaleTriad(", val, ") -> ", fac, ans)
+	return ans, fac
+}
+
+func inMap(val string, m map[int]string) bool {
+	for _, v := range m {
+		if v == val {
+			return true
+		}
+	}
+	return false
+}
+
+func ptNumberIntCardinalCore(gender string, val int, ans *[]string) {
+	println("ptNumberIntCardinalCore(", val, ")")
+	for val > 999 {
+		println(">", val)
+		part, fac := getScaleTriad(val)
+		tmp := val
+		sw := getBestNum(&tmp, ptCardinalsScale)
+		println(val, part, sw)
+		ptNumberIntCardinalCore(gender, part, ans)
+		if part > 1 {
+			sw = strings.Replace(sw, "ão", "ões", -1)
+		}
+		*ans = append(*ans, sw)
+		val -= part * fac
+		println(val, part, sw, part*fac)
+	}
+	*ans = append(*ans, getBestNum(&val, ptCardinalsHundreds))
+	*ans = append(*ans, getBestNum(&val, ptCardinalsTens))
+	*ans = append(*ans, getBestNum(&val, ptCardinalsSmall))
 }
 
 func ptNumberIntCardinal(gender string, val int) string {
-	ans := ""
+	words := make([]string, 0)
 	negative := false
+
+	if val == 0 {
+		return "zero"
+	} else if val == 100 {
+		return "cem"
+	}
 
 	if val < 0 {
 		val *= -1
 		negative = true
 	}
-	// Special case
-	if val == 100 {
-		return "cem"
+	ptNumberIntCardinalCore(gender, val, &words)
+
+	// Filter
+	words2 := words
+	words = make([]string, 0)
+	for _, w := range words2 {
+		if w != "" {
+			words = append(words, w)
+		}
+	}
+
+	// Join words
+	ans := ""
+	for i, w := range words {
+		if i == 0 && i+1 < len(words) && w == "um" && words[i+1] == "mil" {
+			continue
+		}
+		if ans != "" {
+			if inMap(words[i-1], ptCardinalsSmall) || ptCardinalsScaleSet[words[i-1]] {
+				ans += " "
+			} else {
+				ans += " e "
+			}
+		}
+		ans += w
 	}
 
 	// Process gender
@@ -177,27 +284,6 @@ func ptNumberIntCardinal(gender string, val int) string {
 		ans = strings.Replace(ans, "dois", "doux", -1)
 	}
 
-	// I should read http://www.blackwasp.co.uk/NumberToWords.aspx
-
-	// General case (do largest to smallest)
-	for val > 0 {
-		if ans != "" {
-			ans += " e "
-		}
-		if got, ok := ptCardinals[val]; ok {
-			ans += got
-			break
-		}
-		best := 0
-		for _, offer := range ptCardinalsOrder {
-			if best < val && offer <= val {
-				best = offer
-			}
-		}
-		ans += ptCardinals[best]
-		val -= best
-	}
-
 	// Remebember to tell is the number was negative
 	if negative {
 		ans += " negativ@"
@@ -207,5 +293,5 @@ func ptNumberIntCardinal(gender string, val int) string {
 	}
 	// Fix gender
 	ans = strings.Replace(ans, "@", gender_marker, -1)
-	return ans
+	return strings.TrimSpace(ans)
 }

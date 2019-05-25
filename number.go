@@ -8,25 +8,14 @@ import (
 	"unicode/utf8"
 )
 
-// Format: {[thousand separator][decimal separator][digits after separator]}
-// Ex:  {.} 1.000
-// Ex:  {.,2} 1.000,00
-// Ex:  {,.2} 1,000.00
+const (
+	_FLOAT_EPSILON = 1E-10
+)
 
-// Format: {[thousand separator][decimal separator][digits after separator]}
-// Ex:  {.} 1.000
-// Ex:  {.,2} 1.000,00
-// Ex:  {,.2} 1,000.00
-
-// Format: {[thousand separator][decimal separator][digits after separator]}
-// Ex:  {.} 1.000
-// Ex:  {.,2} 1.000,00
-// Ex:  {,.2} 1,000.00
-
-// Format: {[thousand separator][decimal separator][digits after separator]}
-// Ex:  {.} 1.000
-// Ex:  {.,2} 1.000,00
-// Ex:  {,.2} 1,000.00
+/* Format: {[thousand separator][decimal separator][digits after separator]}
+Ex:  {.} 1.000
+Ex:  {.,2} 1.000,00
+Ex:  {,.2} 1,000.00 */
 func FormatNumber(fmt string, amount int) string {
 	ans := strings.Builder{}
 	tmp := strings.Builder{}
@@ -139,10 +128,9 @@ func log10(val int) int {
 }
 
 func getScaleTriad(val int) (int, int) {
-	s := (log10(val) + 2) / 3
+	s := int(math.Log10(float64(val))) / 3
 	fac := int(math.Pow10(s * 3))
 	ans := val / fac
-	println(val, fac, ans, s, math.Log10(float64(val)), log10(val))
 	return ans, fac
 }
 
@@ -153,6 +141,55 @@ func inMap(val string, m map[int]string) bool {
 		}
 	}
 	return false
+}
+
+func int2digits(val int) []int {
+	ans := make([]int, 0)
+
+	// Special case
+	if val == 0 {
+		return []int{0}
+	}
+	// Ignore sign
+	if val < 0 {
+		val *= -1
+	}
+
+	// Do it!
+	for val > 0 {
+		ans = append(ans, val%10)
+		val /= 10
+	}
+
+	// Rverse to get the right order
+	for i := 0; i < len(ans)/2; i++ {
+		a := ans[i]
+		b := ans[len(ans)-i-1]
+		ans[i] = b
+		ans[len(ans)-i-1] = a
+	}
+
+	return ans
+}
+
+func float2digits(val float64) ([]int, int, []int) {
+	if val < 0 {
+		val *= -1
+	}
+
+	int_part := math.Trunc(val)
+	dec_part := val - int_part
+
+	// Find "exponent"
+	exp := 0
+	for ; dec_part-math.Trunc(dec_part) > _FLOAT_EPSILON; exp++ {
+		dec_part *= 10
+	}
+
+	if dec_part < _FLOAT_EPSILON {
+		return int2digits(int(int_part)), exp, []int{}
+	}
+	return int2digits(int(int_part)), exp, int2digits(int(dec_part))
 }
 
 func numberIntCardinalCore(language string, gender string, val int, ans *[]string, cardinalsScale, cardinalsHundreds, cardinalsTens, cardinalsSmall map[int]string) {

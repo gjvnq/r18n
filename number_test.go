@@ -6,6 +6,42 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func Test_int2digits(t *testing.T) {
+	for i := 0; i < 10; i++ {
+		assert.Equal(t, []int{i}, int2digits(i))
+	}
+	for i := 10; i < 20; i++ {
+		assert.Equal(t, []int{1, i - 10}, int2digits(i))
+	}
+	for i := 100; i < 110; i++ {
+		assert.Equal(t, []int{1, 0, i - 100}, int2digits(i))
+	}
+}
+
+func Test_float2digits(t *testing.T) {
+	a, b, c := float2digits(0)
+	assert.Equal(t, []int{0}, a)
+	assert.Equal(t, 0, b)
+	assert.Equal(t, []int{}, c)
+
+	a, b, c = float2digits(3.1415)
+	assert.Equal(t, []int{3}, a)
+	assert.Equal(t, 4, b)
+	assert.Equal(t, []int{1, 4, 1, 5}, c)
+
+	a, b, c = float2digits(-13.1415)
+	assert.Equal(t, []int{1, 3}, a)
+	assert.Equal(t, 4, b)
+	assert.Equal(t, []int{1, 4, 1, 5}, c)
+
+	for i := 100; i < 110; i++ {
+		a, b, c = float2digits(float64(i))
+		assert.Equal(t, []int{1, 0, i - 100}, a)
+		assert.Equal(t, 0, b)
+		assert.Equal(t, []int{}, c)
+	}
+}
+
 func TestFormatNumber(t *testing.T) {
 	assert.Equal(t, "R$ 123,99", FormatNumber("R$ {.,2}", 12399))
 	assert.Equal(t, "R$ 123.000,99", FormatNumber("R$ {.,2}", 12300099))

@@ -17,6 +17,16 @@ import (
 // Ex:  {.} 1.000
 // Ex:  {.,2} 1.000,00
 // Ex:  {,.2} 1,000.00
+
+// Format: {[thousand separator][decimal separator][digits after separator]}
+// Ex:  {.} 1.000
+// Ex:  {.,2} 1.000,00
+// Ex:  {,.2} 1,000.00
+
+// Format: {[thousand separator][decimal separator][digits after separator]}
+// Ex:  {.} 1.000
+// Ex:  {.,2} 1.000,00
+// Ex:  {,.2} 1,000.00
 func FormatNumber(fmt string, amount int) string {
 	ans := strings.Builder{}
 	tmp := strings.Builder{}
@@ -120,10 +130,19 @@ func getBestNum(val *int, m map[int]string) string {
 	return m[best_k]
 }
 
+func log10(val int) int {
+	ans := 0
+	for ; val >= 10; ans++ {
+		val /= 10
+	}
+	return ans
+}
+
 func getScaleTriad(val int) (int, int) {
-	s := int(math.Log10(float64(val))) / 3
+	s := (log10(val) + 2) / 3
 	fac := int(math.Pow10(s * 3))
 	ans := val / fac
+	println(val, fac, ans, s, math.Log10(float64(val)), log10(val))
 	return ans, fac
 }
 
@@ -136,21 +155,52 @@ func inMap(val string, m map[int]string) bool {
 	return false
 }
 
-func numberIntCardinalCore(gender string, val int, ans *[]string, cardinalsScale, cardinalsHundreds, cardinalsTens, cardinalsSmall map[int]string) {
+func numberIntCardinalCore(language string, gender string, val int, ans *[]string, cardinalsScale, cardinalsHundreds, cardinalsTens, cardinalsSmall map[int]string) {
 	for val > 999 {
 		part, fac := getScaleTriad(val)
+		println(">>>", val, part, fac)
+
+		if part > 999 {
+			println(">>>", part, fac)
+			panic("failed on numberIntCardinalCore: number too large")
+		}
+
+		if val == fac {
+			panic("failed on numberIntCardinalCore: number too large2")
+		}
+
 		tmp := val
 		sw := getBestNum(&tmp, cardinalsScale)
-		numberIntCardinalCore(gender, part, ans, cardinalsScale, cardinalsHundreds, cardinalsTens, cardinalsSmall)
+		numberIntCardinalCore(language, gender, part, ans, cardinalsScale, cardinalsHundreds, cardinalsTens, cardinalsSmall)
 		if part > 1 {
 			sw = strings.Replace(sw, "ão", "ões", -1)
 		}
 		*ans = append(*ans, sw)
 		val -= part * fac
 	}
+	old_len := len(*ans)
 	*ans = append(*ans, getBestNum(&val, cardinalsHundreds))
 	*ans = append(*ans, getBestNum(&val, cardinalsTens))
 	*ans = append(*ans, getBestNum(&val, cardinalsSmall))
+
+	if val != 0 {
+		panic("failed on numberIntCardinalCore")
+	}
+
+	if language == PT {
+		println(strings.TrimSpace(strings.Join((*ans)[old_len:], " ")))
+		if strings.TrimSpace(strings.Join((*ans)[old_len:], " ")) == "cento" {
+			(*ans)[old_len] = "cem"
+		}
+	}
+}
+
+// Warning: this only goes
+func NumberFloatCardinal(language string, gender string, val float64) string {
+	if val == 0 {
+		return "zero"
+	}
+	return "?"
 }
 
 func NumberIntCardinal(language string, gender string, val int) string {
@@ -171,10 +221,6 @@ func NumberIntCardinal(language string, gender string, val int) string {
 		words = append(words, "negative")
 	}
 	if language == PT {
-		if val == 100 {
-			words = append(words, "cem")
-			val = 0
-		}
 		cardinalsScale = ptCardinalsScale
 		cardinalsScaleSet = ptCardinalsScaleSet
 		cardinalsHundreds = ptCardinalsHundreds
@@ -191,7 +237,11 @@ func NumberIntCardinal(language string, gender string, val int) string {
 	} else {
 		panic(errors.New("unknown language: " + language))
 	}
-	numberIntCardinalCore(gender, val, &words, cardinalsScale, cardinalsHundreds, cardinalsTens, cardinalsSmall)
+	println(math.Log10(float64(val)))
+	if val >= 1E16 {
+		return ""
+	}
+	numberIntCardinalCore(language, gender, val, &words, cardinalsScale, cardinalsHundreds, cardinalsTens, cardinalsSmall)
 
 	// Filter
 	words2 := words
@@ -212,7 +262,7 @@ func NumberIntCardinal(language string, gender string, val int) string {
 		if ans != "" {
 			switch language {
 			case PT:
-				if inMap(words[i-1], cardinalsSmall) || cardinalsScaleSet[words[i-1]] {
+				if inMap(words[i-1], cardinalsSmall) || cardinalsScaleSet[words[i-1]] || words[i-1] == "cem" {
 					ans += " "
 				} else {
 					ans += and

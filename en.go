@@ -48,19 +48,11 @@ var enCardinalsHundreds map[int]string = map[int]string{
 }
 
 var enCardinalsScale map[int]string = map[int]string{
-	1000:             "thousand",
-	1000000:          "million",
-	1000000000:       "billion",
-	1000000000000:    "trillion",
-	1000000000000000: "quadrillion",
-}
-
-var enCardinalsScalePlural map[int]string = map[int]string{
-	1000:             "thousands",
-	1000000:          "millions",
-	1000000000:       "billions",
-	1000000000000:    "trillions",
-	1000000000000000: "quadrillions",
+	3:  "thousand",
+	6:  "million",
+	9:  "billion",
+	12: "trillion",
+	15: "quadrillion",
 }
 
 var enCardinalsScaleSet map[string]bool
@@ -68,9 +60,6 @@ var enCardinalsScaleSet map[string]bool
 func init() {
 	enCardinalsScaleSet = make(map[string]bool)
 	for _, v := range enCardinalsScale {
-		enCardinalsScaleSet[v] = true
-	}
-	for _, v := range enCardinalsScalePlural {
 		enCardinalsScaleSet[v] = true
 	}
 }

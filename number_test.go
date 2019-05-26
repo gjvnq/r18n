@@ -11,10 +11,10 @@ func Test_int2digits(t *testing.T) {
 		assert.Equal(t, []int{i}, int2digits(i))
 	}
 	for i := 10; i < 20; i++ {
-		assert.Equal(t, []int{1, i - 10}, int2digits(i))
+		assert.Equal(t, []int{i - 10, 1}, int2digits(i))
 	}
 	for i := 100; i < 110; i++ {
-		assert.Equal(t, []int{1, 0, i - 100}, int2digits(i))
+		assert.Equal(t, []int{i - 100, 0, 1}, int2digits(i))
 	}
 }
 
@@ -27,16 +27,16 @@ func Test_float2digits(t *testing.T) {
 	a, b, c = float2digits(3.1415)
 	assert.Equal(t, []int{3}, a)
 	assert.Equal(t, 4, b)
-	assert.Equal(t, []int{1, 4, 1, 5}, c)
+	assert.Equal(t, []int{5, 1, 4, 1}, c)
 
 	a, b, c = float2digits(-13.1415)
-	assert.Equal(t, []int{1, 3}, a)
+	assert.Equal(t, []int{3, 1}, a)
 	assert.Equal(t, 4, b)
-	assert.Equal(t, []int{1, 4, 1, 5}, c)
+	assert.Equal(t, []int{5, 1, 4, 1}, c)
 
 	for i := 100; i < 110; i++ {
 		a, b, c = float2digits(float64(i))
-		assert.Equal(t, []int{1, 0, i - 100}, a)
+		assert.Equal(t, []int{i - 100, 0, 1}, a)
 		assert.Equal(t, 0, b)
 		assert.Equal(t, []int{}, c)
 	}
@@ -78,6 +78,7 @@ func Test_PT_NumberIntCardinal(t *testing.T) {
 	assert.Equal(t, "duzentos", NumberIntCardinal(PT, GENDER_MALE, 200))
 	assert.Equal(t, "duzentas", NumberIntCardinal(PT, GENDER_FEMALE, 200))
 	assert.Equal(t, "duzentxs", NumberIntCardinal(PT, GENDER_NON_BINARY, 200))
+	assert.Equal(t, "cem milhões", NumberIntCardinal(PT, GENDER_NON_BINARY, 100000000))
 	assert.Equal(t, "três milhões quinhentos e vinte e sete mil duzentos e trinta e dois", NumberIntCardinal(PT, GENDER_MALE, 3527232))
 	assert.Equal(t, "três milhões quinhentas e vinte e sete mil duzentas e trinta e duas", NumberIntCardinal(PT, GENDER_FEMALE, 3527232))
 	assert.Equal(t, "três milhões quinhentxs e vinte e sete mil duzentxs e trinta e doux", NumberIntCardinal(PT, GENDER_NON_BINARY, 3527232))

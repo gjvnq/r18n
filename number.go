@@ -143,6 +143,7 @@ func inMap(val string, m map[int]string) bool {
 	return false
 }
 
+// gives in reverse order. Ex: 123 -> []int{3 2 1}
 func int2digits(val int) []int {
 	ans := make([]int, 0)
 
@@ -159,14 +160,6 @@ func int2digits(val int) []int {
 	for val > 0 {
 		ans = append(ans, val%10)
 		val /= 10
-	}
-
-	// Rverse to get the right order
-	for i := 0; i < len(ans)/2; i++ {
-		a := ans[i]
-		b := ans[len(ans)-i-1]
-		ans[i] = b
-		ans[len(ans)-i-1] = a
 	}
 
 	return ans
@@ -240,8 +233,30 @@ func NumberFloatCardinal(language string, gender string, val float64) string {
 	return "?"
 }
 
+func digits2triadseq(digits []int) []int {
+	for len(digits)%3 != 0 {
+		digits = append(digits, 0)
+	}
+
+	triads := make([]int, 0)
+	for i := 0; i < len(digits); i += 3 {
+		triad := digits[i] + 10*digits[i+1] + 100*digits[i+2]
+		triads = append(triads, triad)
+	}
+
+	// Reverse
+	for i := 0; i < len(triads)/2; i++ {
+		a := triads[i]
+		b := triads[len(triads)-i-1]
+		triads[i] = b
+		triads[len(triads)-i-1] = a
+	}
+
+	return triads
+}
+
 func NumberIntCardinal(language string, gender string, val int) string {
-	var cardinalsScale, cardinalsHundreds, cardinalsTens, cardinalsSmall map[int]string
+	var cardinalsScale, cardinalsScalePlural, cardinalsHundreds, cardinalsTens, cardinalsSmall map[int]string
 	var cardinalsScaleSet map[string]bool
 	var and string
 	words := make([]string, 0)
@@ -259,6 +274,7 @@ func NumberIntCardinal(language string, gender string, val int) string {
 	}
 	if language == PT {
 		cardinalsScale = ptCardinalsScale
+		cardinalsScalePlural = ptCardinalsScalePlural
 		cardinalsScaleSet = ptCardinalsScaleSet
 		cardinalsHundreds = ptCardinalsHundreds
 		cardinalsTens = ptCardinalsTens
@@ -274,11 +290,41 @@ func NumberIntCardinal(language string, gender string, val int) string {
 	} else {
 		panic(errors.New("unknown language: " + language))
 	}
-	println(math.Log10(float64(val)))
-	if val >= 1E16 {
-		return ""
+	digits := int2digits(val)
+	if val >= 1E18 {
+		and = " "
+		for i := len(digits) - 1; i >= 0; i-- {
+			w := cardinalsSmall[digits[i]]
+			if digits[i] == 0 {
+				w = "zero"
+			}
+			words = append(words, w)
+		}
+	} else {
+		triads := digits2triadseq(digits)
+
+		println("-------")
+		for i, triad := range triads {
+			if language == PT && triad == 100 {
+				words = append(words, "cem")
+			} else {
+				tmp := triad
+				words = append(words, getBestNum(&tmp, cardinalsHundreds))
+				words = append(words, getBestNum(&tmp, cardinalsTens))
+				words = append(words, getBestNum(&tmp, cardinalsSmall))
+			}
+
+			scale := (len(triads) - i - 1) * 3
+			scaleWord := cardinalsScale[scale]
+			if triad > 1 && cardinalsScalePlural != nil {
+				scaleWord = cardinalsScalePlural[scale]
+			}
+			println(triad, scaleWord)
+			if triad > 0 {
+				words = append(words, scaleWord)
+			}
+		}
 	}
-	numberIntCardinalCore(language, gender, val, &words, cardinalsScale, cardinalsHundreds, cardinalsTens, cardinalsSmall)
 
 	// Filter
 	words2 := words
@@ -291,7 +337,9 @@ func NumberIntCardinal(language string, gender string, val int) string {
 
 	// Join words
 	ans := ""
-	and = " " + and + " "
+	if and != " " {
+		and = " " + and + " "
+	}
 	for i, w := range words {
 		if language == PT && i == 0 && i+1 < len(words) && w == "um" && words[i+1] == "mil" {
 			continue

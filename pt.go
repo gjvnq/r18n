@@ -48,19 +48,19 @@ var ptCardinalsHundreds map[int]string = map[int]string{
 }
 
 var ptCardinalsScale map[int]string = map[int]string{
-	1000:             "mil",
-	1000000:          "milhão",
-	1000000000:       "bilhão",
-	1000000000000:    "trilhão",
-	1000000000000000: "quadrilhão",
+	3:  "mil",
+	6:  "milhão",
+	9:  "bilhão",
+	12: "trilhão",
+	15: "quadrilhão",
 }
 
 var ptCardinalsScalePlural map[int]string = map[int]string{
-	1000:             "mil",
-	1000000:          "milhões",
-	1000000000:       "bilhões",
-	1000000000000:    "trilhões",
-	1000000000000000: "quadrilhões",
+	3:  "mil",
+	6:  "milhões",
+	9:  "bilhões",
+	12: "trilhões",
+	15: "quadrilhões",
 }
 
 var ptCardinalsScaleSet map[string]bool

@@ -67,7 +67,6 @@ func Test_PT_NumberIntCardinal(t *testing.T) {
 	assert.Equal(t, "cem bilhões", NumberIntCardinal(PT, GENDER_FEMALE, 100000000000))
 	assert.Equal(t, "um trilhão", NumberIntCardinal(PT, GENDER_FEMALE, 1000000000000))
 	assert.Equal(t, "cem trilhões", NumberIntCardinal(PT, GENDER_FEMALE, 100000000000000))
-	println("======hi")
 	assert.Equal(t, "um quadrilhão", NumberIntCardinal(PT, GENDER_FEMALE, 1000000000000000))
 	assert.Equal(t, "cem quadrilhões", NumberIntCardinal(PT, GENDER_FEMALE, 100000000000000000))
 	// assert.Equal(t, "um quintilhão", NumberIntCardinal(PT, GENDER_FEMALE, 1000000000000000000))

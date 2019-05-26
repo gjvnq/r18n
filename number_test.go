@@ -18,30 +18,6 @@ func Test_int2digits(t *testing.T) {
 	}
 }
 
-func Test_float2digits(t *testing.T) {
-	a, b, c := float2digits(0)
-	assert.Equal(t, []int{0}, a)
-	assert.Equal(t, 0, b)
-	assert.Equal(t, []int{}, c)
-
-	a, b, c = float2digits(3.1415)
-	assert.Equal(t, []int{3}, a)
-	assert.Equal(t, 4, b)
-	assert.Equal(t, []int{5, 1, 4, 1}, c)
-
-	a, b, c = float2digits(-13.1415)
-	assert.Equal(t, []int{3, 1}, a)
-	assert.Equal(t, 4, b)
-	assert.Equal(t, []int{5, 1, 4, 1}, c)
-
-	for i := 100; i < 110; i++ {
-		a, b, c = float2digits(float64(i))
-		assert.Equal(t, []int{i - 100, 0, 1}, a)
-		assert.Equal(t, 0, b)
-		assert.Equal(t, []int{}, c)
-	}
-}
-
 func TestFormatNumber(t *testing.T) {
 	assert.Equal(t, "R$ 123,99", FormatNumber("R$ {.,2}", 12399))
 	assert.Equal(t, "R$ 123.000,99", FormatNumber("R$ {.,2}", 12300099))
@@ -100,6 +76,7 @@ func Test_PT_NumberIntCardinal(t *testing.T) {
 
 func Test_PT_NumberFloatCardinal(t *testing.T) {
 	assert.Equal(t, "zero", NumberFloatCardinal(PT, GENDER_FEMALE, 0))
+	assert.Equal(t, "doze", NumberFloatCardinal(PT, GENDER_FEMALE, 12))
 	assert.Equal(t, "um décimo", NumberFloatCardinal(PT, GENDER_FEMALE, 0.1))
 	assert.Equal(t, "um centavo", NumberFloatCardinal(PT, GENDER_FEMALE, 0.01))
 	assert.Equal(t, "um milésimo", NumberFloatCardinal(PT, GENDER_FEMALE, 0.001))

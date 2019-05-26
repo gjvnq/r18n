@@ -48,6 +48,9 @@ var ptCardinalsHundreds map[int]string = map[int]string{
 }
 
 var ptCardinalsScale map[int]string = map[int]string{
+	-3: "milésimo",
+	-2: "centavo",
+	-1: "décimo",
 	3:  "mil",
 	6:  "milhão",
 	9:  "bilhão",
@@ -56,6 +59,9 @@ var ptCardinalsScale map[int]string = map[int]string{
 }
 
 var ptCardinalsScalePlural map[int]string = map[int]string{
+	-3: "milésimos",
+	-2: "centavos",
+	-1: "décimos",
 	3:  "mil",
 	6:  "milhões",
 	9:  "bilhões",

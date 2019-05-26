@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	_FLOAT_EPSILON = 1E-10
+	_FLOAT_EPSILON = 1E-5
 )
 
 /* Format: {[thousand separator][decimal separator][digits after separator]}
@@ -119,21 +119,6 @@ func getBestNum(val *int, m map[int]string) string {
 	return m[best_k]
 }
 
-func log10(val int) int {
-	ans := 0
-	for ; val >= 10; ans++ {
-		val /= 10
-	}
-	return ans
-}
-
-func getScaleTriad(val int) (int, int) {
-	s := int(math.Log10(float64(val))) / 3
-	fac := int(math.Pow10(s * 3))
-	ans := val / fac
-	return ans, fac
-}
-
 func inMap(val string, m map[int]string) bool {
 	for _, v := range m {
 		if v == val {
@@ -165,7 +150,7 @@ func int2digits(val int) []int {
 	return ans
 }
 
-func float2digits(val float64) ([]int, int, []int) {
+func float2parts(val float64) (int, int, int) {
 	if val < 0 {
 		val *= -1
 	}
@@ -175,54 +160,14 @@ func float2digits(val float64) ([]int, int, []int) {
 
 	// Find "exponent"
 	exp := 0
+	if dec_part < _FLOAT_EPSILON {
+		return int(int_part), exp, 0
+	}
 	for ; dec_part-math.Trunc(dec_part) > _FLOAT_EPSILON; exp++ {
 		dec_part *= 10
 	}
 
-	if dec_part < _FLOAT_EPSILON {
-		return int2digits(int(int_part)), exp, []int{}
-	}
-	return int2digits(int(int_part)), exp, int2digits(int(dec_part))
-}
-
-func numberIntCardinalCore(language string, gender string, val int, ans *[]string, cardinalsScale, cardinalsHundreds, cardinalsTens, cardinalsSmall map[int]string) {
-	for val > 999 {
-		part, fac := getScaleTriad(val)
-		println(">>>", val, part, fac)
-
-		if part > 999 {
-			println(">>>", part, fac)
-			panic("failed on numberIntCardinalCore: number too large")
-		}
-
-		if val == fac {
-			panic("failed on numberIntCardinalCore: number too large2")
-		}
-
-		tmp := val
-		sw := getBestNum(&tmp, cardinalsScale)
-		numberIntCardinalCore(language, gender, part, ans, cardinalsScale, cardinalsHundreds, cardinalsTens, cardinalsSmall)
-		if part > 1 {
-			sw = strings.Replace(sw, "ão", "ões", -1)
-		}
-		*ans = append(*ans, sw)
-		val -= part * fac
-	}
-	old_len := len(*ans)
-	*ans = append(*ans, getBestNum(&val, cardinalsHundreds))
-	*ans = append(*ans, getBestNum(&val, cardinalsTens))
-	*ans = append(*ans, getBestNum(&val, cardinalsSmall))
-
-	if val != 0 {
-		panic("failed on numberIntCardinalCore")
-	}
-
-	if language == PT {
-		println(strings.TrimSpace(strings.Join((*ans)[old_len:], " ")))
-		if strings.TrimSpace(strings.Join((*ans)[old_len:], " ")) == "cento" {
-			(*ans)[old_len] = "cem"
-		}
-	}
+	return int(int_part), exp, int(dec_part)
 }
 
 // Warning: this only goes
@@ -230,7 +175,52 @@ func NumberFloatCardinal(language string, gender string, val float64) string {
 	if val == 0 {
 		return "zero"
 	}
-	return "?"
+
+	ints, exp, digits := float2parts(val)
+	ints_str := ""
+	if ints != 0 {
+		ints_str = NumberIntCardinal(language, gender, ints)
+	}
+
+	if exp == 0 {
+		return ints_str
+	}
+	ans := ints_str
+
+	if exp <= 3 {
+		cardinalsScale := enCardinalsScale
+		if language == PT {
+			cardinalsScale = ptCardinalsScale
+			gender = GENDER_MALE
+		}
+		if language == PT && digits > 1 {
+			cardinalsScale = ptCardinalsScalePlural
+		}
+
+		if ans != "" {
+			if language == PT {
+				ans += " " + ptAnd + " "
+			} else {
+				ans += " " + enAnd + " "
+			}
+		}
+		ans += NumberIntCardinal(language, gender, digits)
+		ans += " "
+		ans += cardinalsScale[-exp]
+		return ans
+	}
+
+	if ans == "" {
+		ans += "zero"
+	}
+
+	if language == PT {
+		ans += " separador decimal "
+	} else {
+		ans += " decimal separator "
+	}
+	ans += NumberIntCardinalInDigits(language, gender, digits)
+	return ans
 }
 
 func digits2triadseq(digits []int) []int {
@@ -253,6 +243,29 @@ func digits2triadseq(digits []int) []int {
 	}
 
 	return triads
+}
+
+func NumberIntCardinalInDigits(language string, gender string, val int) string {
+	var cardinalsSmall map[int]string
+	if language == PT {
+		cardinalsSmall = ptCardinalsSmall
+	} else if language == EN {
+		cardinalsSmall = enCardinalsSmall
+	} else {
+		panic(errors.New("unknown language: " + language))
+	}
+
+	digits := int2digits(val)
+	words := make([]string, 0)
+	for i := len(digits) - 1; i >= 0; i-- {
+		w := cardinalsSmall[digits[i]]
+		if digits[i] == 0 {
+			w = "zero"
+		}
+		words = append(words, w)
+	}
+
+	return strings.Join(words, " ")
 }
 
 func NumberIntCardinal(language string, gender string, val int) string {
@@ -290,20 +303,12 @@ func NumberIntCardinal(language string, gender string, val int) string {
 	} else {
 		panic(errors.New("unknown language: " + language))
 	}
-	digits := int2digits(val)
 	if val >= 1E18 {
-		and = " "
-		for i := len(digits) - 1; i >= 0; i-- {
-			w := cardinalsSmall[digits[i]]
-			if digits[i] == 0 {
-				w = "zero"
-			}
-			words = append(words, w)
-		}
+		return NumberIntCardinalInDigits(language, gender, val)
 	} else {
+		digits := int2digits(val)
 		triads := digits2triadseq(digits)
 
-		println("-------")
 		for i, triad := range triads {
 			if language == PT && triad == 100 {
 				words = append(words, "cem")
@@ -319,7 +324,6 @@ func NumberIntCardinal(language string, gender string, val int) string {
 			if triad > 1 && cardinalsScalePlural != nil {
 				scaleWord = cardinalsScalePlural[scale]
 			}
-			println(triad, scaleWord)
 			if triad > 0 {
 				words = append(words, scaleWord)
 			}

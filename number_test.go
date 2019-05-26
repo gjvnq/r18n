@@ -86,6 +86,19 @@ func Test_PT_NumberFloatCardinal(t *testing.T) {
 	assert.Equal(t, "três separador decimal um quatro um cinco nove dois seis cinco três cinco nove", NumberFloatCardinal(PT, GENDER_FEMALE, 3.14159265359))
 }
 
+func Test_EN_NumberFloatCardinal(t *testing.T) {
+	assert.Equal(t, "zero", NumberFloatCardinal(EN, GENDER_FEMALE, 0))
+	assert.Equal(t, "twelve", NumberFloatCardinal(EN, GENDER_FEMALE, 12))
+	assert.Equal(t, "one tenth", NumberFloatCardinal(EN, GENDER_FEMALE, 0.1))
+	assert.Equal(t, "one hundredth", NumberFloatCardinal(EN, GENDER_FEMALE, 0.01))
+	assert.Equal(t, "one thousandth", NumberFloatCardinal(EN, GENDER_FEMALE, 0.001))
+	assert.Equal(t, "two tenths", NumberFloatCardinal(EN, GENDER_FEMALE, 0.2))
+	assert.Equal(t, "twelve hundredths", NumberFloatCardinal(EN, GENDER_FEMALE, 0.12))
+	assert.Equal(t, "one hundred and twenty three thousandths", NumberFloatCardinal(EN, GENDER_FEMALE, 0.123))
+	assert.Equal(t, "zero decimal separator one two three four", NumberFloatCardinal(EN, GENDER_FEMALE, 0.1234))
+	assert.Equal(t, "three decimal separator one four one five nine two six five three five nine", NumberFloatCardinal(EN, GENDER_FEMALE, 3.14159265359))
+}
+
 func Test_EN_NumberIntCardinal(t *testing.T) {
 	assert.Equal(t, "zero", NumberIntCardinal(EN, GENDER_MALE, 0))
 	assert.Equal(t, "one", NumberIntCardinal(EN, GENDER_MALE, 1))

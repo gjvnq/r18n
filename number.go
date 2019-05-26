@@ -196,6 +196,9 @@ func NumberFloatCardinal(language string, gender string, val float64) string {
 		if language == PT && decimal_part > 1 {
 			cardinalsScale = ptCardinalsScalePlural
 		}
+		if language == EN && decimal_part > 1 {
+			cardinalsScale = enCardinalsScalePlural
+		}
 
 		if ans != "" {
 			if language == PT {

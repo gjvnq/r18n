@@ -393,3 +393,49 @@ func NumberIntCardinal(language string, gender string, val int) string {
 	ans = strings.Replace(ans, "@", gender_marker, -1)
 	return strings.TrimSpace(ans)
 }
+
+// not working properly
+func NumberOrdinal(language string, gender string, val int) string {
+	negative := false
+	words := make([]string, 0)
+
+	if val < 0 {
+		val *= -1
+		negative = true
+	}
+	if negative && language == EN {
+		words = append(words, "negative")
+	}
+
+	if val == 0 {
+		words = append(words, ptOrdinal[0])
+	}
+
+	for val > 0 {
+		words = append(words, getBestNum(&val, ptOrdinal))
+	}
+
+	ans := strings.Join(words, " ")
+
+	// Process gender
+	gender_marker := "o"
+	if gender == GENDER_FEMALE {
+		gender_marker = "a"
+		ans = strings.Replace(ans, "dois", "duas", -1)
+	}
+	if gender == GENDER_NON_BINARY {
+		gender_marker = "x"
+		ans = strings.Replace(ans, "dois", "doux", -1)
+	}
+
+	// Remebember to tell is the number was negative
+	if negative && language == PT {
+		ans += " negativ@"
+		if val > 1 {
+			ans += "s"
+		}
+	}
+	// Fix gender
+	ans = strings.Replace(ans, "@", gender_marker, -1)
+	return strings.TrimSpace(ans)
+}

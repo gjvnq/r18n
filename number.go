@@ -16,7 +16,7 @@ const (
 Ex:  {.} 1.000
 Ex:  {.,2} 1.000,00
 Ex:  {,.2} 1,000.00 */
-func FormatNumber(fmt string, amount int) string {
+func _FormatNumber(fmt string, amount int) string {
 	ans := strings.Builder{}
 	tmp := strings.Builder{}
 	mode := 0 // 0 - copying | 1 - escape | 2 - processing | 3 - finalizing
@@ -171,7 +171,7 @@ func float2parts(val float64) (int, int, int) {
 }
 
 // Warning: this only goes
-func NumberFloatCardinal(language string, gender string, val float64) string {
+func _NumberFloatCardinal(language string, gender string, val float64) string {
 	if val == 0 {
 		return "zero"
 	}
@@ -179,7 +179,7 @@ func NumberFloatCardinal(language string, gender string, val float64) string {
 	int_part, exp, decimal_part := float2parts(val)
 	int_part_str := ""
 	if int_part != 0 {
-		int_part_str = NumberIntCardinal(language, gender, int_part)
+		int_part_str = _NumberIntCardinal(language, gender, int_part)
 	}
 
 	if exp == 0 {
@@ -207,7 +207,7 @@ func NumberFloatCardinal(language string, gender string, val float64) string {
 				ans += " " + enAnd + " "
 			}
 		}
-		ans += NumberIntCardinal(language, gender, decimal_part)
+		ans += _NumberIntCardinal(language, gender, decimal_part)
 		ans += " "
 		ans += cardinalsScale[exp]
 		return ans
@@ -222,7 +222,7 @@ func NumberFloatCardinal(language string, gender string, val float64) string {
 	} else {
 		ans += " decimal separator "
 	}
-	ans += NumberIntCardinalInDigits(language, gender, decimal_part)
+	ans += _NumberIntCardinalInDigits(language, gender, decimal_part)
 	return ans
 }
 
@@ -248,7 +248,7 @@ func digits2triadseq(digits []int) []int {
 	return triads
 }
 
-func NumberIntCardinalInDigits(language string, gender string, val int) string {
+func _NumberIntCardinalInDigits(language string, gender string, val int) string {
 	var cardinalsSmall map[int]string
 	if language == PT {
 		cardinalsSmall = ptCardinalsSmall
@@ -271,7 +271,7 @@ func NumberIntCardinalInDigits(language string, gender string, val int) string {
 	return strings.Join(words, " ")
 }
 
-func NumberIntCardinal(language string, gender string, val int) string {
+func _NumberIntCardinal(language string, gender string, val int) string {
 	var cardinalsScale, cardinalsScalePlural, cardinalsHundreds, cardinalsTens, cardinalsSmall map[int]string
 	var cardinalsScaleSet map[string]bool
 	var and string
@@ -307,7 +307,7 @@ func NumberIntCardinal(language string, gender string, val int) string {
 		panic(errors.New("unknown language: " + language))
 	}
 	if val >= 1E18 {
-		return NumberIntCardinalInDigits(language, gender, val)
+		return _NumberIntCardinalInDigits(language, gender, val)
 	} else {
 		digits := int2digits(val)
 		triads := digits2triadseq(digits)
@@ -395,7 +395,7 @@ func NumberIntCardinal(language string, gender string, val int) string {
 }
 
 // not working properly
-func NumberOrdinal(language string, gender string, val int) string {
+func _NumberOrdinal(language string, gender string, val int) string {
 	negative := false
 	words := make([]string, 0)
 

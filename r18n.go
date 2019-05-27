@@ -13,22 +13,8 @@ const (
 	PT = "pt"
 )
 
-type MsgPart interface {
-	GenderAndNumber() string
-	String() string
-}
-
-type MsgPartNumerical struct {
-	Amount int
-}
-
-type MsgPartMoney struct {
-	Amount   int // in cents
-	Currency string
-}
-
 type R18N struct {
-	Messages            map[string]map[string]string
+	Messages            map[string]map[string]Message
 	FallbackGenderOrder []string
 	FallbackPluralOrder []string
 }
@@ -37,6 +23,10 @@ func (this *R18N) init() {
 	if this.Messages == nil {
 		this.Messages = make(map[string]map[string]string)
 	}
+}
+
+func (this *R18N) T(lang string, msg_id string, values ...interface{}) string {
+	return ""
 }
 
 func NewR18N() *R18N {
